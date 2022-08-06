@@ -43,6 +43,8 @@
 
 #include "./detail/resolve_parameter_overrides.hpp"
 
+#include "rclcpp/tcl_node_interfaces/node_timing_coordination.hpp"
+
 using rclcpp::Node;
 using rclcpp::NodeOptions;
 using rclcpp::exceptions::throw_from_rcl_error;
@@ -192,6 +194,12 @@ Node::Node(
     )),
   node_waitables_(new rclcpp::node_interfaces::NodeWaitables(node_base_.get())),
   node_options_(options),
+  node_timing_coordination_(new rclcpp::tcl_node_interfaces::NodeTimingCoordination(
+    node_base_,
+    node_parameters_,
+    node_topics_,
+    options
+  )),
   sub_namespace_(""),
   effective_namespace_(create_effective_namespace(this->get_namespace(), sub_namespace_))
 {
@@ -578,6 +586,13 @@ rclcpp::node_interfaces::NodeWaitablesInterface::SharedPtr
 Node::get_node_waitables_interface()
 {
   return node_waitables_;
+}
+
+
+rclcpp::tcl_node_interfaces::NodeTimingCoordinationInterface::SharedPtr
+Node::get_node_timing_coordination_interface()
+{
+  return node_timing_coordination_;
 }
 
 const std::string &

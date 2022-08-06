@@ -42,6 +42,7 @@
 #include "rclcpp/visibility_control.hpp"
 #include "rclcpp/scope_exit.hpp"
 
+#include "rclcpp/tcl_node_interfaces/node_timing_coordination_interface.hpp"
 namespace rclcpp
 {
 
@@ -208,6 +209,10 @@ public:
   virtual void
   add_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify = true);
 
+  RCLCPP_PUBLIC
+  virtual void
+  add_node_timing_coordination(rclcpp::tcl_node_interfaces::NodeTimingCoordinationInterface::SharedPtr node_tcl_ptr);
+  
   /// Remove a node from the executor.
   /**
    * Any callback groups automatically added when this node was added with

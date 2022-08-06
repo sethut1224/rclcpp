@@ -69,6 +69,7 @@
 #include "rclcpp/time.hpp"
 #include "rclcpp/timer.hpp"
 #include "rclcpp/visibility_control.hpp"
+#include "rclcpp/tcl_node_interfaces/node_timing_coordination_interface.hpp"
 
 namespace rclcpp
 {
@@ -1183,6 +1184,10 @@ public:
   rclcpp::node_interfaces::NodeTimeSourceInterface::SharedPtr
   get_node_time_source_interface();
 
+  RCLCPP_PUBLIC
+  rclcpp::tcl_node_interfaces::NodeTimingCoordinationInterface::SharedPtr
+  get_node_timing_coordination_interface();
+
   /// Return the sub-namespace, if this is a sub-node, otherwise an empty string.
   /**
    * The returned sub-namespace is either the accumulated sub-namespaces which
@@ -1316,10 +1321,13 @@ private:
   rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_parameters_;
   rclcpp::node_interfaces::NodeTimeSourceInterface::SharedPtr node_time_source_;
   rclcpp::node_interfaces::NodeWaitablesInterface::SharedPtr node_waitables_;
-
+  
   const rclcpp::NodeOptions node_options_;
+
+  rclcpp::tcl_node_interfaces::NodeTimingCoordinationInterface::SharedPtr node_timing_coordination_;
+
   const std::string sub_namespace_;
-  const std::string effective_namespace_;
+  const std::string effective_namespace_;  
 };
 
 }  // namespace rclcpp

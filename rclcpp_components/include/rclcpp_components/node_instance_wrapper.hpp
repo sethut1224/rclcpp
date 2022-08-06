@@ -19,6 +19,7 @@
 #include <memory>
 
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
+#include "rclcpp/tcl_node_interfaces/node_timing_coordination_interface.hpp"
 
 namespace rclcpp_components
 {
@@ -28,7 +29,9 @@ class NodeInstanceWrapper
 public:
   using NodeBaseInterfaceGetter = std::function<
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr(const std::shared_ptr<void> &)>;
-
+  using NodeTimingCoordinationInterfaceGetter = std::function<
+    rclcpp::tcl_node_interfaces::NodeTimingCoordinationInterface::SharedPtr(const std::shared_ptr<void> &)>;
+  
   NodeInstanceWrapper()
   : node_instance_(nullptr)
   {}
@@ -37,6 +40,13 @@ public:
     std::shared_ptr<void> node_instance,
     NodeBaseInterfaceGetter node_base_interface_getter)
   : node_instance_(node_instance), node_base_interface_getter_(node_base_interface_getter)
+  {}
+
+  NodeInstanceWrapper(
+    std::shared_ptr<void> node_instance,
+    NodeBaseInterfaceGetter node_base_interface_getter,
+    NodeTimingCoordinationInterfaceGetter node_timing_coordination_interface_getter)
+  : node_instance_(node_instance), node_base_interface_getter_(node_base_interface_getter), node_timing_coordination_interface_getter_(node_timing_coordination_interface_getter)
   {}
 
   /// Get a type-erased pointer to the original Node instance
@@ -62,9 +72,17 @@ public:
     return node_base_interface_getter_(node_instance_);
   }
 
+
+  rclcpp::tcl_node_interfaces::NodeTimingCoordinationInterface::SharedPtr
+  get_node_timing_coordination_interface()
+  {
+    return node_timing_coordination_interface_getter_(node_instance_);
+  }
+
 private:
   std::shared_ptr<void> node_instance_;
   NodeBaseInterfaceGetter node_base_interface_getter_;
+  NodeTimingCoordinationInterfaceGetter node_timing_coordination_interface_getter_;
 };
 }  // namespace rclcpp_components
 

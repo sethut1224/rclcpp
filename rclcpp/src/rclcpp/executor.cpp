@@ -345,6 +345,12 @@ Executor::add_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify)
 }
 
 void
+Executor::add_node_timing_coordination(rclcpp::tcl_node_interfaces::NodeTimingCoordinationInterface::SharedPtr node_tcl_ptr)
+{
+  (void)node_tcl_ptr;
+}
+
+void
 Executor::remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify)
 {
   if (!node_ptr->get_associated_with_executor_atomic().load()) {

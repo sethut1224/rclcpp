@@ -89,6 +89,8 @@
 #include "rclcpp_lifecycle/transition.hpp"
 #include "rclcpp_lifecycle/visibility_control.h"
 
+#include "rclcpp/tcl_node_interfaces/node_timing_coordination_interface.hpp"
+
 namespace rclcpp_lifecycle
 {
 
@@ -1010,7 +1012,9 @@ private:
   rclcpp::node_interfaces::NodeTimeSourceInterface::SharedPtr node_time_source_;
   rclcpp::node_interfaces::NodeWaitablesInterface::SharedPtr node_waitables_;
 
+  
   const rclcpp::NodeOptions node_options_;
+  rclcpp::tcl_node_interfaces::NodeTimingCoordinationInterface::SharedPtr node_timing_coordination_;
 
   class LifecycleNodeInterfaceImpl;
   std::unique_ptr<LifecycleNodeInterfaceImpl> impl_;

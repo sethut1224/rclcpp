@@ -208,8 +208,11 @@ ComponentManager::OnLoadNode(
       }
 
       auto node = node_wrappers_[node_id].get_node_base_interface();
+      auto node_tcl = node_wrappers_[node_id].get_node_timing_coordination_interface();
+
       if (auto exec = executor_.lock()) {
         exec->add_node(node, true);
+        exec->add_node_timing_coordination(node_tcl);
       }
       response->full_node_name = node->get_fully_qualified_name();
       response->unique_id = node_id;

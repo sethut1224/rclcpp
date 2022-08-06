@@ -22,6 +22,7 @@
 #include "rclcpp/visibility_control.hpp"
 
 #include "rcl/wait.h"
+#include "rclcpp/tcl_timing_header_traits/tcl_timing_header_traits.hpp"
 
 namespace rclcpp
 {
@@ -189,6 +190,13 @@ public:
   void
   execute(std::shared_ptr<void> & data) = 0;
 
+
+  RCLCPP_PUBLIC
+  virtual tcl_msgs::msg::TimingCoordinationHeader read_timing_header(std::shared_ptr<void> & data)
+  {
+    (void)data;
+    return tcl_msgs::msg::TimingCoordinationHeader();
+  }
   /// Exchange the "in use by wait set" state for this timer.
   /**
    * This is used to ensure this timer is not used by multiple

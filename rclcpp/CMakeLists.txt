@@ -21,6 +21,8 @@ find_package(rosidl_typesupport_cpp REQUIRED)
 find_package(statistics_msgs REQUIRED)
 find_package(tracetools REQUIRED)
 
+find_package(tcl_msgs REQUIRED)
+
 # TODO(wjwwood): remove this when gtest can build on its own, when using target_compile_features()
 # Default to C++17
 if(NOT CMAKE_CXX_STANDARD)
@@ -110,6 +112,20 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/waitable.cpp
 )
 
+set(TCL_NODE_INTERFACES
+  src/rclcpp/tcl_node_interfaces/node_timing_coordination.cpp
+)
+
+set(TCL_TIMER
+  src/rclcpp/tcl_timer/release_wall_timer.cpp
+)
+
+set(TCL_TIMING_INTERFACES
+src/rclcpp/tcl_timing_interfaces/tcl_timing_profile.cpp
+src/rclcpp/tcl_timing_interfaces/tcl_timing_message_propagate.cpp
+)
+
+
 # "watch" template for changes
 configure_file(
   "resource/logging.hpp.em"
@@ -176,6 +192,11 @@ foreach(interface_file ${interface_files})
     include/rclcpp/node_interfaces/get_${interface_name}.hpp)
 endforeach()
 
+list(APPEND ${PROJECT_NAME}_SRCS
+${TCL_NODE_INTERFACES}
+${TCL_TIMER}
+${TCL_TIMING_INTERFACES})
+  
 add_library(${PROJECT_NAME} ${${PROJECT_NAME}_SRCS})
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 # TODO(wjwwood): address all deprecation warnings and then remove this
@@ -201,6 +222,7 @@ ament_target_dependencies(${PROJECT_NAME}
   "rosidl_runtime_cpp"
   "statistics_msgs"
   "tracetools"
+  "tcl_msgs"
 )
 
 # Causes the visibility macros to use dllexport rather than dllimport,
@@ -233,6 +255,7 @@ ament_export_dependencies(rosidl_runtime_cpp)
 ament_export_dependencies(rcl_yaml_param_parser)
 ament_export_dependencies(statistics_msgs)
 ament_export_dependencies(tracetools)
+ament_export_dependencies(tcl_msgs)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

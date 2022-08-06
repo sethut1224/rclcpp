@@ -45,7 +45,7 @@ public:
     auto node = std::make_shared<NodeT>(options);
 
     return NodeInstanceWrapper(
-      node, std::bind(&NodeT::get_node_base_interface, node));
+      node, std::bind(&NodeT::get_node_base_interface, node), std::bind(&NodeT::get_node_timing_coordination_interface, node));
   }
 };
 }  // namespace rclcpp_components

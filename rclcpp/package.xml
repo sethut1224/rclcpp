@@ -36,6 +36,8 @@
   <depend>statistics_msgs</depend>
   <depend>tracetools</depend>
 
+  <depend>tcl_msgs</depend>
+
   <test_depend>ament_cmake_gmock</test_depend>
   <test_depend>ament_cmake_google_benchmark</test_depend>
   <test_depend>ament_cmake_gtest</test_depend>
