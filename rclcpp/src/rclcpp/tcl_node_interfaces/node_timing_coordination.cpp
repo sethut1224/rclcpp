@@ -91,7 +91,7 @@ NodeTimingCoordination::NodeTimingCoordination(
         create_profile_publisher(std::string(node_base_->get_name()));
     }
     
-    print_node_sched_info();
+    // print_node_sched_info();
 }
 
 bool 

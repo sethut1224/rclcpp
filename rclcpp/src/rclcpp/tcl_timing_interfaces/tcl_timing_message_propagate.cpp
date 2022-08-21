@@ -61,8 +61,8 @@ TimingCoordinationHeader TimingMessagePropagate::propagate_timing_header()
 TimingCoordinationHeader TimingMessagePropagate::create_timing_header()
 {   
     struct timespec ts;
-    clock_gettime(CLOCK_MONOTONIC, &ts);
-    auto now = rclcpp::Time(static_cast<int32_t>(ts.tv_sec), static_cast<uint32_t>(ts.tv_nsec), RCL_STEADY_TIME);
+    clock_gettime(CLOCK_REALTIME, &ts);
+    auto now = rclcpp::Time(static_cast<int32_t>(ts.tv_sec), static_cast<uint32_t>(ts.tv_nsec));
 
     int64_t create_time = now.nanoseconds();
     uint64_t msg_id = create_time / 10000;
