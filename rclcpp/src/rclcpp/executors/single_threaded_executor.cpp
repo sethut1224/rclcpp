@@ -62,6 +62,7 @@ void SingleThreadedExecutor::spin_some(std::chrono::nanoseconds max_duration)
   //   throw std::runtime_error("spin some period must be bigger to timer period [spin_some : "
   //   +std::to_string(max_duration.count()) +" timer : " + std::to_string(this->timer_->get_period().count()) + " ]");
   // }
+  start_time_ = get_now();
   return this->spin_some_impl(max_duration, true);
 }
 

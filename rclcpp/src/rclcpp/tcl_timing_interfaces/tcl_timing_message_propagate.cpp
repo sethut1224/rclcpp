@@ -44,6 +44,8 @@ void TimingMessagePropagate::receive_timing_header(TimingCoordinationHeader& msg
             timing_header_msg_->msg_infos.push_back(msg_info);
         }
     });
+
+    timing_header_msg_->task_name = task_name_;
 }
 
 TimingCoordinationHeader TimingMessagePropagate::propagate_timing_header()
@@ -75,7 +77,7 @@ TimingCoordinationHeader TimingMessagePropagate::create_timing_header()
     msg_info.task_history.push_back(task_name_);
 
     timing_header.msg_infos.push_back(msg_info);
-
+    timing_header.task_name = task_name_;
     *timing_header_msg_.get() = timing_header;
 
     return *timing_header_msg_.get();
