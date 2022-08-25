@@ -463,6 +463,12 @@ LifecycleNode::get_node_waitables_interface()
   return node_waitables_;
 }
 
+rclcpp::tcl_node_interfaces::NodeTimingCoordinationInterface::SharedPtr
+LifecycleNode::get_node_timing_coordination_interface()
+{
+  return node_timing_coordination_;
+}
+
 const rclcpp::NodeOptions &
 LifecycleNode::get_node_options() const
 {

@@ -764,6 +764,10 @@ public:
   rclcpp::node_interfaces::NodeWaitablesInterface::SharedPtr
   get_node_waitables_interface();
 
+  RCLCPP_LIFECYCLE_PUBLIC
+  rclcpp::tcl_node_interfaces::NodeTimingCoordinationInterface::SharedPtr
+  get_node_timing_coordination_interface();
+  
   /// Return the NodeOptions used when creating this node.
   /**
    * \sa rclcpp::Node::get_node_options
