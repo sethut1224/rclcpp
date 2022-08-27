@@ -57,11 +57,6 @@ SingleThreadedExecutor::sleep()
 
 void SingleThreadedExecutor::spin_some(std::chrono::nanoseconds max_duration)
 {
-  // if(max_duration.count() != this->timer_->get_period().count())
-  // {
-  //   throw std::runtime_error("spin some period must be bigger to timer period [spin_some : "
-  //   +std::to_string(max_duration.count()) +" timer : " + std::to_string(this->timer_->get_period().count()) + " ]");
-  // }
   start_time_ = get_now();
   return this->spin_some_impl(max_duration, true);
 }
@@ -394,15 +389,23 @@ SingleThreadedExecutor::execute_any_executable(AnyExecutable & any_exec)
     return false;
   }
   if (any_exec.subscription) {
-    add_subscription_to_buffer(any_exec.subscription, any_exec.node_base->get_name());
-    if(!use_intra_process_)
-      cond = blocking_condition<NodeTopicSubscriptionObjects>(
-        any_exec.node_base->get_name(), 
-        node_topic_subscription_objects_);
-    
+    if(!node_communication_types_[node_name_str].second)
+      execute_subscription(any_exec.subscription);
+    else
+    {
+      add_subscription_to_buffer(any_exec.subscription, any_exec.node_base->get_name());
+      if(!use_intra_process_)
+        cond = blocking_condition<NodeTopicSubscriptionObjects>(
+          any_exec.node_base->get_name(), 
+          node_topic_subscription_objects_);
+    }
+
   }
   if (any_exec.timer) {
-    add_timer_to_buffer(any_exec.timer, any_exec.node_base->get_name());
+    if(!node_communication_types_[node_name_str].second)
+      execute_timer(any_exec.timer);
+    else
+      add_timer_to_buffer(any_exec.timer, any_exec.node_base->get_name());
     // execute_timer(any_exec.timer);
   }
   if (any_exec.service) {
@@ -414,14 +417,19 @@ SingleThreadedExecutor::execute_any_executable(AnyExecutable & any_exec)
     execute_client(any_exec.client);
   }
   if (any_exec.waitable) {
-    add_waitable_to_buffer(any_exec.waitable, any_exec.data, any_exec.node_base->get_name());
-    if(use_intra_process_)
-      cond = blocking_condition<NodeTopicWaitableObjects>(
-        any_exec.node_base->get_name(), 
-        node_topic_waitable_objects_);
+    if(!node_communication_types_[node_name_str].second)
+        any_exec.waitable->execute(any_exec.data);
+    else
+    {
+      add_waitable_to_buffer(any_exec.waitable, any_exec.data, any_exec.node_base->get_name());
+      if(use_intra_process_)
+        cond = blocking_condition<NodeTopicWaitableObjects>(
+          any_exec.node_base->get_name(), 
+          node_topic_waitable_objects_);
+    }
   }
 
-  if(cond)
+  if(cond && node_communication_types_[node_name_str].second)
   {
     handle_buffer(any_exec.node_base->get_name());
     update_cond_map(any_exec.node_base->get_name());
@@ -581,7 +589,7 @@ SingleThreadedExecutor::add_subscription_to_buffer(rclcpp::SubscriptionBase::Sha
     std::string node_name_str = std::string(node_name);
     std::string topic_name_str = std::string(subscription->get_topic_name());
 
-    if(topic_name_str == "/parameter_events")
+    if(topic_name_str == "/parameter_events" || topic_name_str == "/tf" || topic_name_str == "/tf_static")
     {
       take_and_do_error_handling(
       "taking a message from topic",

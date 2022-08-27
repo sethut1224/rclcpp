@@ -3,7 +3,6 @@
 
 #include <type_traits>
 #include "tcl_msgs/msg/timing_coordination_header.hpp"
-#include "std_msgs/msg/header.hpp"
 #include "rcpputils/pointer_traits.hpp"
 
 using tcl_msgs::msg::TimingCoordinationHeader;

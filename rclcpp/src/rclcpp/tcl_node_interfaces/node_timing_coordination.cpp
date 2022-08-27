@@ -126,13 +126,7 @@ NodeTimingCoordination::sched_set_scheduler(int64_t priority, int scheduling_alg
         perror("sched_setscheduler");
         return false;
     }
-
-    // std::string cmd = std::string("chrt -a -f -p ") + std::to_string(priority) + " " + std::to_string(getpid()) + std::string(" &");
-    // if (std::system(cmd.c_str()) < 0)
-    // {
-    //     std::cout << "set_priority failed" << std::endl;
-    // }
-
+    
     return true;
 }
 

@@ -6,7 +6,6 @@
 #include "rclcpp/macros.hpp"
 #include "rclcpp/visibility_control.hpp"
 #include "tcl_msgs/msg/timing_coordination_header.hpp"
-#include "std_msgs/msg/header.hpp"
 // #include "rclcpp/tcl_timing_header_traits/tcl_timing_header_traits.hpp"
 
 using tcl_msgs::msg::TimingCoordinationHeader;
