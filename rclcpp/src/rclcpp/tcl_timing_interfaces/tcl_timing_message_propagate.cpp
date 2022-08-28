@@ -55,7 +55,8 @@ void TimingMessagePropagate::timing_message_callback(const TimingCoordinationHea
 
 void TimingMessagePropagate::publish_timing_message()
 {
-    timing_publisher_->publish(*timing_header_msg_);
+    if(timing_publisher_)
+        timing_publisher_->publish(*timing_header_msg_);
 }
 
 void TimingMessagePropagate::receive_timing_header(TimingCoordinationHeader& msg)

@@ -319,7 +319,8 @@ NodeTimingCoordination::get_timing_header_ptr() const
 void
 NodeTimingCoordination::propagate_timing_message()
 {
-    timing_message_propagate_->publish_timing_message();
+    if(timing_message_propagate_)
+        timing_message_propagate_->publish_timing_message();
 }
 
 tcl_msgs::msg::TimingCoordinationHeader
