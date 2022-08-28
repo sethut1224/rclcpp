@@ -27,13 +27,16 @@ void TimingProfile::publish(
     rclcpp::Time release_end,
     rclcpp::Time execution_start,
     rclcpp::Time execution_end)
-{
-    Profile msg = Profile();
-    msg.timing_header = *timing_header.get();
-    msg.release_time.start = release_start.nanoseconds();
-    msg.release_time.end = release_end.nanoseconds();
-    msg.execution_time.start = execution_start.nanoseconds();
-    msg.execution_time.end = execution_end.nanoseconds();
+{   
+    if(profile_publisher_)
+    {   
+        Profile msg = Profile();
+        msg.timing_header = *timing_header.get();
+        msg.release_time.start = release_start.nanoseconds();
+        msg.release_time.end = release_end.nanoseconds();
+        msg.execution_time.start = execution_start.nanoseconds();
+        msg.execution_time.end = execution_end.nanoseconds();
 
-    profile_publisher_->publish(msg);
+        profile_publisher_->publish(msg);
+    }
 }
