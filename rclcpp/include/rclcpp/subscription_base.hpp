@@ -203,13 +203,6 @@ public:
   return_serialized_message(std::shared_ptr<rclcpp::SerializedMessage> & message) = 0;
 
   RCLCPP_PUBLIC
-  virtual tcl_msgs::msg::TimingCoordinationHeader read_timing_header(std::shared_ptr<void>& message)
-  {
-    (void)message;
-    return tcl_msgs::msg::TimingCoordinationHeader();
-  }
-
-  RCLCPP_PUBLIC
   const rosidl_message_type_support_t &
   get_message_type_support_handle() const;
 

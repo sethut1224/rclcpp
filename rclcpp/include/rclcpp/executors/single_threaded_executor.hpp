@@ -91,14 +91,13 @@ typedef typename std::unordered_map<std::string, TopicWaitableObjects> NodeTopic
 typedef typename std::vector<rclcpp::TimerBase::SharedPtr> TimerObjects;
 typedef typename std::unordered_map<std::string, TimerObjects> NodeTimerObjects;
 
-typedef typename std::unordered_map<std::string, std::vector<std::string>> NodeBlockingTopics;
-
 typedef typename rclcpp::tcl_timing_interfaces::TimingProfile::SharedPtr TimingProfileSharedPtr;
 typedef typename std::unordered_map<std::string, TimingProfileSharedPtr> NodeTimingProfiles;
 
 typedef typename rclcpp::tcl_timing_interfaces::TimingMessagePropagate::SharedPtr TimingMessagePropagateSharedPtr;
 typedef typename std::unordered_map<std::string, TimingMessagePropagateSharedPtr> NodeTimingMessagePropagates;
 
+typedef typename std::unordered_map<std::string, std::vector<std::string>> NodeTopics;
 typedef typename std::unordered_map<std::string, std::pair<bool, bool>> NodeCommunicationTypes;
 
 class SingleThreadedExecutor : public rclcpp::Executor
@@ -126,14 +125,6 @@ public:
   RCLCPP_PUBLIC
   void
   spin() override;
-
-  RCLCPP_PUBLIC
-  void
-  spin_once(std::chrono::nanoseconds timeout = std::chrono::nanoseconds(-1)) override;
-  
-  RCLCPP_PUBLIC
-  void
-  spin_once_impl(std::chrono::nanoseconds timeout) override;
 
   RCLCPP_PUBLIC
   virtual void
@@ -203,19 +194,17 @@ public:
   blocking_condition(const char * node_name, ObjectsMap& map)
   {
     bool ret = true;
-    if(!use_tcl_)
-      return ret;
-
     std::string node_name_str = std::string(node_name);
+
+    if(!node_communication_types_[node_name_str].second)
+      return ret;
 
     std::for_each(node_blocking_topics_[node_name_str].begin(), node_blocking_topics_[node_name_str].end(), [&](auto& topic)
     {
-      auto it = std::find_if(
-        map[node_name_str].begin(), 
-        map[node_name_str].end(),
-        [&](auto& v){
-          return v.first == topic;
-        });
+      auto it = std::find_if( map[node_name_str].begin(),  map[node_name_str].end(), [&](auto& v)
+      {
+        return v.first == topic;
+      });
 
       if(it == map[node_name_str].end())
         ret = false;
@@ -223,15 +212,6 @@ public:
 
     return ret;
   }
-
-  RCLCPP_PUBLIC
-  void update_cond_map(const char * node_name);
-
-  RCLCPP_PUBLIC
-  void reset_cond_map();
-
-  RCLCPP_PUBLIC
-  bool check_condition();
 
   RCLCPP_PUBLIC
   void
@@ -248,6 +228,15 @@ public:
   RCLCPP_PUBLIC
   void
   handle_timer_buffer(const char * node_name);
+
+  RCLCPP_PUBLIC
+  void update_cond_map(const char * node_name);
+
+  RCLCPP_PUBLIC
+  void reset_cond_map();
+
+  RCLCPP_PUBLIC
+  bool check_condition();
 
   RCLCPP_PUBLIC
   bool
@@ -282,22 +271,20 @@ private:
 
   std::unordered_map<std::string, bool> node_cond_map_;
   std::vector<bool> node_intra_process_default_;
+
   NodeCommunicationTypes node_communication_types_;
-  
   NodeTopicSubscriptionObjects node_topic_subscription_objects_;
   NodeServiceObjects node_service_objects_;
   NodeClientObjects node_client_objects_;
   NodeTopicWaitableObjects node_topic_waitable_objects_;
   NodeTimerObjects node_timer_objects_;
-  NodeBlockingTopics node_blocking_topics_;
+  NodeTopics node_blocking_topics_;
   NodeTimingProfiles node_timing_profiles_;
   NodeTimingMessagePropagates node_timing_message_propagates_;
   
   rclcpp::tcl_timer::ReleaseWallTimer::SharedPtr timer_;
-
   rclcpp::Time start_time_;
   rclcpp::Time end_time_;
-
   std::chrono::nanoseconds timeout_;
   
   std::function<rclcpp::Time()> get_now = [&]()

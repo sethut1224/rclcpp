@@ -16,6 +16,48 @@ TimingMessagePropagate::TimingMessagePropagate(const char* task_name)
     task_name_ = std::string(task_name);
 }
 
+void 
+TimingMessagePropagate::create_subscription(
+    rclcpp::node_interfaces::NodeParametersInterface::SharedPtr & node_parameters,
+    rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr & node_topics,
+    std::string topic_name)
+{
+    auto sub = rclcpp::create_subscription<tcl_msgs::msg::TimingCoordinationHeader>(
+        node_parameters,
+        node_topics,
+        topic_name,
+        rclcpp::QoS(KeepLast(1)),
+        std::bind(&TimingMessagePropagate::timing_message_callback, this, std::placeholders::_1));
+
+    timing_subscriber_map_[topic_name] = sub;   
+}
+
+void
+TimingMessagePropagate::create_publisher(
+    rclcpp::node_interfaces::NodeParametersInterface::SharedPtr & node_parameters,
+    rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr & node_topics,
+    std::string topic_name)
+{
+    auto pub = rclcpp::detail::create_publisher<tcl_msgs::msg::TimingCoordinationHeader>(
+        node_parameters,
+        node_topics,
+        topic_name,
+        rclcpp::QoS(rclcpp::KeepLast(1)));
+    
+    timing_publisher_ = pub;
+}
+
+void TimingMessagePropagate::timing_message_callback(const TimingCoordinationHeader::SharedPtr msg)
+{
+    TimingCoordinationHeader::SharedPtr timing_header = std::make_shared<TimingCoordinationHeader>(*msg);
+    receive_timing_header(*timing_header);
+}
+
+void TimingMessagePropagate::publish_timing_message()
+{
+    timing_publisher_->publish(*timing_header_msg_);
+}
+
 void TimingMessagePropagate::receive_timing_header(TimingCoordinationHeader& msg)
 {
     std::for_each(msg.msg_infos.begin(), msg.msg_infos.end(), [&](auto& msg_info)
@@ -46,17 +88,6 @@ void TimingMessagePropagate::receive_timing_header(TimingCoordinationHeader& msg
     });
 
     timing_header_msg_->task_name = task_name_;
-}
-
-TimingCoordinationHeader TimingMessagePropagate::propagate_timing_header()
-{
-    TimingCoordinationHeader msg = *timing_header_msg_.get();
-    std::for_each(msg.msg_infos.begin(), msg.msg_infos.end(), [&](auto msg_info)
-    {
-        msg_info.task_history.push_back(task_name_);
-    });
-
-    return msg;
 }
 
 

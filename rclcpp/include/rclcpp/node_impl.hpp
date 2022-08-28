@@ -75,22 +75,11 @@ Node::create_publisher(
   const rclcpp::QoS & qos,
   const PublisherOptionsWithAllocator<AllocatorT> & options)
 {
-  auto pub = rclcpp::create_publisher<MessageT, AllocatorT, PublisherT>(
+  return rclcpp::create_publisher<MessageT, AllocatorT, PublisherT>(
     *this,
     extend_name_with_sub_namespace(topic_name, this->get_sub_namespace()),
     qos,
     options);
-
-  bool topic_propagate_status = this->get_node_timing_coordination_interface()->topic_propagate_status(topic_name);
-
-  if(HasHeader<MessageT>::value && topic_propagate_status)
-    pub->set_propagate(true);
-  else
-    pub->set_propagate(false);
-
-  pub->set_timing_header_ptr(this->get_node_timing_coordination_interface()->get_timing_header_ptr());
-
-  return pub;
 }
 
 template<

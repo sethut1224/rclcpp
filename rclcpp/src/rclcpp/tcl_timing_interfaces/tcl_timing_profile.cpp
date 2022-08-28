@@ -2,9 +2,23 @@
 
 using rclcpp::tcl_timing_interfaces::TimingProfile;
 
-TimingProfile::TimingProfile(std::shared_ptr<Publisher<Profile>> pub)
-:timing_profile_publisher_(pub)
+TimingProfile::TimingProfile(std::string node_name)
+:node_name_(node_name)
 {
+}
+
+void TimingProfile::create_publisher(
+    rclcpp::node_interfaces::NodeParametersInterface::SharedPtr & node_parameters,
+    rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr & node_topics,
+    std::string topic_name)
+{
+    auto pub = rclcpp::detail::create_publisher<tcl_msgs::msg::Profile>(
+        node_parameters,
+        node_topics,
+        topic_name,
+        rclcpp::QoS(rclcpp::KeepLast(1)));
+
+    profile_publisher_ = pub;
 }
 
 void TimingProfile::publish(
@@ -21,11 +35,5 @@ void TimingProfile::publish(
     msg.execution_time.start = execution_start.nanoseconds();
     msg.execution_time.end = execution_end.nanoseconds();
 
-    timing_profile_publisher_->publish(msg);
-}
-
-void 
-TimingProfile::set_profile_publisher(std::shared_ptr<Publisher<Profile>> publisher)
-{
-    timing_profile_publisher_ = publisher;
+    profile_publisher_->publish(msg);
 }

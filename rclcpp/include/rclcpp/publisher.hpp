@@ -186,9 +186,6 @@ public:
   virtual void
   publish(std::unique_ptr<MessageT, MessageDeleter> msg)
   {
-    if(propagate_timing_header_)
-      Propagate<MessageT>::propagate(*msg, *header_msg_);
-
     if (!intra_process_is_enabled_) {
       this->do_inter_process_publish(*msg);
       return;
@@ -211,33 +208,8 @@ public:
   }
 
   virtual void
-  publish(MessageT & msg)
-  {
-    if(propagate_timing_header_)
-      Propagate<MessageT>::propagate(msg, *header_msg_);
-
-    // Avoid allocating when not using intra process.
-    if (!intra_process_is_enabled_) {
-      // In this case we're not using intra process.
-      return this->do_inter_process_publish(msg);
-    }
-    // Otherwise we have to allocate memory in a unique_ptr and pass it along.
-    // As the message is not const, a copy should be made.
-    // A shared_ptr<const MessageT> could also be constructed here.
-    auto ptr = MessageAllocatorTraits::allocate(*message_allocator_.get(), 1);
-    MessageAllocatorTraits::construct(*message_allocator_.get(), ptr, msg);
-    MessageUniquePtr unique_msg(ptr, message_deleter_);
-    this->publish(std::move(unique_msg));
-  }
-
-  virtual void
   publish(const MessageT & msg)
   {
-    if(propagate_timing_header_)
-    {
-      throw std::runtime_error("cannot propagate timing header if message type is const");
-    }
-
     // Avoid allocating when not using intra process.
     if (!intra_process_is_enabled_) {
       // In this case we're not using intra process.
@@ -303,16 +275,6 @@ public:
   get_allocator() const
   {
     return message_allocator_;
-  }
-
-  void set_propagate(bool flag)
-  {
-    propagate_timing_header_ = flag;
-  }
-
-  void set_timing_header_ptr(tcl_msgs::msg::TimingCoordinationHeader::SharedPtr msg)
-  {
-    header_msg_ = msg;
   }
 
 protected:
@@ -419,18 +381,8 @@ protected:
   std::shared_ptr<MessageAllocator> message_allocator_;
 
   MessageDeleter message_deleter_;
-
-  bool propagate_timing_header_{false};
-  tcl_msgs::msg::TimingCoordinationHeader::SharedPtr header_msg_;
 };
 
 }  // namespace rclcpp
 
 #endif  // RCLCPP__PUBLISHER_HPP_
-
-
-
-//create 할때 publisher 에게 propagate 가 필요한지 알려줘야함
-//create 할 때 node timing interfaces 가 이걸 알려줘야함
-//만약 propagate_timing_header 가 true 라고 하면
-//header_msg_ 를 message propagate 와 연결해줘야함

@@ -5,11 +5,11 @@
 #include "rclcpp/visibility_control.hpp"
 #include "tcl_msgs/msg/profile.hpp"
 #include "rclcpp/time.hpp"
-// #include "rclcpp/create_publisher.hpp"
+#include "rclcpp/create_publisher.hpp"
 #include "rclcpp/node_interfaces/node_parameters_interface.hpp"
 #include "rclcpp/node_interfaces/node_topics_interface.hpp"
 #include "rclcpp/node_interfaces/get_node_topics_interface.hpp"
-#include "rclcpp/detail/qos_parameters.hpp"
+
 
 using tcl_msgs::msg::Profile;
 using tcl_msgs::msg::TimingCoordinationHeader;
@@ -18,17 +18,17 @@ namespace rclcpp
 {
 namespace tcl_timing_interfaces
 {   
-
     class TimingProfile
     {
     private:
-        std::shared_ptr<Publisher<Profile>> timing_profile_publisher_;
+        std::shared_ptr<Publisher<Profile>> profile_publisher_;
+        std::string node_name_;
 
     public:
         RCLCPP_SMART_PTR_ALIASES_ONLY(TimingProfile)
         TimingProfile() = default;
         ~TimingProfile() = default;
-        TimingProfile(std::shared_ptr<Publisher<Profile>> pub);
+        TimingProfile(std::string node_name);
 
         RCLCPP_PUBLIC
         void publish(
@@ -39,8 +39,10 @@ namespace tcl_timing_interfaces
             rclcpp::Time execution_end);
         
         RCLCPP_PUBLIC
-        void set_profile_publisher(std::shared_ptr<Publisher<Profile>> publisher);
-
+        void create_publisher(
+            rclcpp::node_interfaces::NodeParametersInterface::SharedPtr & node_parameters,
+            rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr & node_topics,
+            std::string topic_name);
     };
 
 }

@@ -144,17 +144,6 @@ public:
     execute_impl<CallbackMessageT>(data);
   }
 
-  tcl_msgs::msg::TimingCoordinationHeader read_timing_header(std::shared_ptr<void> & data)
-  {
-    auto shared_ptr = std::static_pointer_cast<std::pair<ConstMessageSharedPtr, MessageUniquePtr>>(data);
-    
-    if (any_callback_.use_take_shared_method())
-      return TimingHeader<CallbackMessageT>::value(*shared_ptr->first);
-
-    else
-      return TimingHeader<CallbackMessageT>::value(*shared_ptr->second);
-  }
-
   void
   provide_intra_process_message(ConstMessageSharedPtr message)
   {

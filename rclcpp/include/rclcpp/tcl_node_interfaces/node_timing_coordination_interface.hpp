@@ -8,7 +8,7 @@
 #include "rclcpp/tcl_timer/release_wall_timer.hpp"
 #include "rclcpp/tcl_timing_interfaces/tcl_timing_profile.hpp"
 #include "rclcpp/tcl_timing_interfaces/tcl_timing_message_propagate.hpp"
-
+#include "rclcpp/tcl_timing_header_traits/tcl_timing_header_traits.hpp"
 #include <unistd.h>
 
 namespace rclcpp
@@ -34,7 +34,10 @@ public:
     virtual std::vector<std::string> get_blocking_topics() = 0;
 
     RCLCPP_PUBLIC
-    virtual std::vector<std::string> get_timing_observation_topics() = 0;
+    virtual std::vector<std::string> get_sub_timing_observation_topics() = 0;
+
+    RCLCPP_PUBLIC
+    virtual std::vector<std::string> get_pub_timing_observation_topics() = 0;
 
     RCLCPP_PUBLIC
     virtual int64_t get_cpu_affinity() = 0;
@@ -50,6 +53,9 @@ public:
 
     RCLCPP_PUBLIC
     virtual int64_t get_message_communication_type() = 0;
+
+    RCLCPP_PUBLIC
+    virtual bool get_enable_profile() = 0;
 
     RCLCPP_PUBLIC
     virtual std::chrono::nanoseconds get_period_ns() const = 0;
@@ -94,13 +100,11 @@ public:
     virtual tcl_msgs::msg::TimingCoordinationHeader::SharedPtr get_timing_header_ptr() const = 0;
 
     RCLCPP_PUBLIC
-    virtual bool topic_propagate_status(std::string topic_name) = 0;
-
-    RCLCPP_PUBLIC
-    virtual void create_profile_publisher(const std::string& node_name) = 0;
+    virtual void propagate_timing_message()  = 0;
 
     RCLCPP_PUBLIC
     virtual tcl_msgs::msg::TimingCoordinationHeader create_timing_header() = 0;
+
 };
 
 }

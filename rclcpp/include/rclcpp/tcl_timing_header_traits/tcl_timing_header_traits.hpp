@@ -2,47 +2,23 @@
 #define RCLCPP__TCL_TIMING_HEADER_TRATIS__HPP_
 
 #include <type_traits>
+#include "tcl_msgs/msg/profile.hpp"
 #include "tcl_msgs/msg/timing_coordination_header.hpp"
 #include "rcpputils/pointer_traits.hpp"
 
+using tcl_msgs::msg::Profile;
 using tcl_msgs::msg::TimingCoordinationHeader;
 
-template<typename M, typename = void> 
-struct HasHeader : public std::false_type {};
+template<typename M, typename = void>
+struct isProfileMessage : public std::false_type{};
 
 template<typename M>
-struct HasHeader<M, decltype((void) M::header)>: std::true_type {};
+struct isProfileMessage<M, typename std::enable_if<std::is_same<M, Profile>::value>::type> : std::true_type {};
 
-template<typename M, typename Enable = void>
-struct TimingHeader
-{
-    static tcl_msgs::msg::TimingCoordinationHeader value(const M &m) {
-        (void)m;
-        return TimingCoordinationHeader();
-    }
-};
+template<typename M, typename = void>
+struct isTimingHeader : public std::false_type{};
 
 template<typename M>
-struct TimingHeader<M, typename std::enable_if<HasHeader<M>::value>::type >
-{
-  static tcl_msgs::msg::TimingCoordinationHeader value(const M& m) {
-    return m.header.timing_header;
-  }
-};
+struct isTimingHeader<M, typename std::enable_if<std::is_same<M, TimingCoordinationHeader>::value>::type> : std::true_type {};
 
-
-template<typename M, typename Enable = void>
-struct Propagate
-{
-  static void  propagate(M& m, const TimingCoordinationHeader& u) {(void)m; (void)u; return; }
-};
-
-template<typename M>
-struct Propagate<M, typename std::enable_if<HasHeader<M>::value>::type >
-{
-  static void propagate(M& m, const TimingCoordinationHeader& u) { 
-      m.header.timing_header = u;
-    }
-};
-     
 #endif

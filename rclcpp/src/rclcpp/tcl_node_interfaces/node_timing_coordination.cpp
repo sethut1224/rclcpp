@@ -12,8 +12,7 @@ NodeTimingCoordination::NodeTimingCoordination(
 :   node_base_(node_base),
     node_parameters_(node_parameters),
     node_topics_(node_topics),
-    options_(options),
-    timing_message_propagate_(new rclcpp::tcl_timing_interfaces::TimingMessagePropagate(node_base_->get_name()))
+    options_(options)
 {
     cpu_affinity_ = node_parameters_->declare_parameter(
         "tcl_sched_param.cpu",
@@ -45,8 +44,13 @@ NodeTimingCoordination::NodeTimingCoordination(
         rclcpp::ParameterValue(std::vector<std::string>())
     ).get<std::vector<std::string>>();
 
-    timing_observation_topics_ = node_parameters_->declare_parameter(
-        "tcl_timing_param.timing_observation_topics",
+    sub_timing_observation_topics_ = node_parameters_->declare_parameter(
+        "tcl_timing_param.sub_timing_observation_topics",
+        rclcpp::ParameterValue(std::vector<std::string>())
+    ).get<std::vector<std::string>>();
+
+    pub_timing_observation_topics_ = node_parameters_->declare_parameter(
+        "tcl_timing_param.pub_timing_observation_topics",
         rclcpp::ParameterValue(std::vector<std::string>())
     ).get<std::vector<std::string>>();
 
@@ -55,13 +59,21 @@ NodeTimingCoordination::NodeTimingCoordination(
         rclcpp::ParameterValue(-1)
     ).get<int64_t>();
 
+    enable_profile_ = node_parameters_->declare_parameter(
+        "tcl_timing_param.enable_profile",
+        rclcpp::ParameterValue(false)
+    ).get<bool>();
+
     use_tcl_ = message_communication_type_ == -1 ? false : true;
 
     if(blocking_topics_.size() > 0 && blocking_topics_[0].compare("") == 0)
         blocking_topics_.clear();
-    
-    if(timing_observation_topics_.size() > 0 && timing_observation_topics_[0].compare("") == 0)
-        timing_observation_topics_.clear();
+
+    if(sub_timing_observation_topics_.size() > 0 && sub_timing_observation_topics_[0].compare("") == 0)
+        sub_timing_observation_topics_.clear();
+
+    if(pub_timing_observation_topics_.size() > 0 && pub_timing_observation_topics_[0].compare("") == 0)
+        pub_timing_observation_topics_.clear();
     
     std::for_each(blocking_topics_.begin(), blocking_topics_.end(), [&](auto& topic)
     {
@@ -69,7 +81,13 @@ NodeTimingCoordination::NodeTimingCoordination(
             topic = std::string("/") + topic;
     });
 
-    std::for_each(timing_observation_topics_.begin(), timing_observation_topics_.end(), [&](auto& topic)
+    std::for_each(sub_timing_observation_topics_.begin(), sub_timing_observation_topics_.end(), [&](auto& topic)
+    {
+        if(topic.front() != '/')
+            topic = std::string("/") + topic;
+    });
+
+    std::for_each(pub_timing_observation_topics_.begin(), pub_timing_observation_topics_.end(), [&](auto& topic)
     {
         if(topic.front() != '/')
             topic = std::string("/") + topic;
@@ -87,11 +105,21 @@ NodeTimingCoordination::NodeTimingCoordination(
 
     if(use_tcl_)
     {
+        std::string node_name_str = std::string(node_base_->get_name());
+
+        this->create_timing_publisher(node_name_str);
+        if(enable_profile_)
+            this->create_profile_publisher(node_name_str);
+
+        std::for_each(sub_timing_observation_topics_.begin(), sub_timing_observation_topics_.end(), [&](auto& topic)
+        {
+            this->create_timing_subscriber(topic);
+        });
+
         timer_ = std::make_shared<rclcpp::tcl_timer::ReleaseWallTimer>(rate_, phase_, global_ref_time_point_);
-        create_profile_publisher(std::string(node_base_->get_name()));
     }
     
-    // print_node_sched_info();
+    print_node_sched_info();
 }
 
 bool 
@@ -137,9 +165,15 @@ NodeTimingCoordination::get_blocking_topics()
 }
 
 std::vector<std::string>
-NodeTimingCoordination::get_timing_observation_topics()
+NodeTimingCoordination::get_sub_timing_observation_topics()
 {
-    return this->timing_observation_topics_;
+    return this->sub_timing_observation_topics_;
+}
+
+std::vector<std::string>
+NodeTimingCoordination::get_pub_timing_observation_topics()
+{
+    return this->pub_timing_observation_topics_;
 }
 
 int64_t 
@@ -184,6 +218,12 @@ NodeTimingCoordination::blocking_io()
     return (this->message_communication_type_ == 1 && this->blocking_topics_.size() > 0);
 }
 
+bool
+NodeTimingCoordination::get_enable_profile()
+{
+    return this->enable_profile_;
+}
+
 void
 NodeTimingCoordination::print_node_sched_info()
 {
@@ -201,13 +241,19 @@ NodeTimingCoordination::print_node_sched_info()
         });
     }
     std::cout<<std::endl;
-    std::cout<<"timing observation topics : ";
-    if(timing_observation_topics_.size() > 0)
-    std::for_each(timing_observation_topics_.begin(), timing_observation_topics_.end(), [&](auto& topic)
+    std::cout<<"sub timing observation topics : ";
+    if(sub_timing_observation_topics_.size() > 0)
+    std::for_each(sub_timing_observation_topics_.begin(), sub_timing_observation_topics_.end(), [&](auto& topic)
     {
         std::cout<<topic<<" ";
     });
     std::cout<<std::endl;
+    std::cout<<"pub timing observation topics : ";
+    if(pub_timing_observation_topics_.size() > 0)
+    std::for_each(pub_timing_observation_topics_.begin(), pub_timing_observation_topics_.end(), [&](auto& topic)
+    {
+        std::cout<<topic<<" ";
+    });
 }
 
 rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
@@ -269,23 +315,11 @@ NodeTimingCoordination::get_timing_header_ptr() const
 {
     return timing_message_propagate_->get_timing_header_ptr();
 }
- 
-bool 
-NodeTimingCoordination::topic_propagate_status(std::string topic_name)
-{   
-    if(topic_name.front() != '/')
-        topic_name = std::string("/") + topic_name;
-
-    auto ret = std::find(timing_observation_topics_.begin(), timing_observation_topics_.end(), topic_name);
-    
-    return !(ret == timing_observation_topics_.end());
-}
 
 void
-NodeTimingCoordination::create_profile_publisher(const std::string& node_name)
+NodeTimingCoordination::propagate_timing_message()
 {
-    std::string timing_topic_name = node_name + std::string("/timing");
-    create_publisher_impl(timing_topic_name);
+    timing_message_propagate_->publish_timing_message();
 }
 
 tcl_msgs::msg::TimingCoordinationHeader

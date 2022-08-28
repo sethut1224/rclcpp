@@ -262,13 +262,6 @@ public:
     return message_memory_strategy_->borrow_serialized_message();
   }
 
-  tcl_msgs::msg::TimingCoordinationHeader
-  read_timing_header(std::shared_ptr<void>& message)
-  {
-    auto typed_message = std::static_pointer_cast<CallbackMessageT>(message);
-    return TimingHeader<CallbackMessageT>::value(*typed_message);
-  }
-
   void
   handle_message(
     std::shared_ptr<void> & message,

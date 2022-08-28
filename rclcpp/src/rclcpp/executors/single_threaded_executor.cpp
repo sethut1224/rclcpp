@@ -105,30 +105,6 @@ SingleThreadedExecutor::spin_some_impl(std::chrono::nanoseconds max_duration, bo
 }
 
 void
-SingleThreadedExecutor::spin_once_impl(std::chrono::nanoseconds timeout)
-{
-  AnyExecutable any_exec;
-  if (get_next_executable(any_exec, timeout)) {
-    execute_any_executable(any_exec);
-    if(this->check_condition())
-    {
-      this->reset_cond_map();
-    }
-  }
-}
-
-void
-SingleThreadedExecutor::spin_once(std::chrono::nanoseconds timeout)
-{
-  start_time_ = get_now();
-  if (spinning.exchange(true)) {
-    throw std::runtime_error("spin_once() called while already spinning");
-  }
-  RCLCPP_SCOPE_EXIT(this->spinning.store(false); );
-  spin_once_impl(timeout);
-}
-
-void
 SingleThreadedExecutor::add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify)
 {
   // If the node already has an executor
@@ -166,7 +142,6 @@ bool
 SingleThreadedExecutor::verify_use_tcl()
 {
   bool val = node_communication_types_.begin()->second.first;
-
   auto ret = std::find_if(node_communication_types_.begin(), node_communication_types_.end(), [&](auto& type)
   {
     return type.second.first == !val;
@@ -223,17 +198,18 @@ SingleThreadedExecutor::add_node_timing_coordination(rclcpp::tcl_node_interfaces
 
   if(use_tcl_)
   {
-    init_timing_coordination_dependency_map<NodeBlockingTopics, std::string, std::vector<std::string>>(
+    init_timing_coordination_dependency_map<NodeTopics, std::string, std::vector<std::string>>(
       node_blocking_topics_, 
       node_name_str, 
       node_tcl_ptr->get_blocking_topics(),
       "NodeBlockingTopics");
 
-    init_timing_coordination_dependency_map<NodeTimingProfiles, std::string, TimingProfileSharedPtr>(
-      node_timing_profiles_,
-      node_name_str,
-      node_tcl_ptr->get_timing_profile(),
-      "NodeTimingProfiles");
+    if(node_tcl_ptr->get_enable_profile())
+      init_timing_coordination_dependency_map<NodeTimingProfiles, std::string, TimingProfileSharedPtr>(
+        node_timing_profiles_,
+        node_name_str,
+        node_tcl_ptr->get_timing_profile(),
+        "NodeTimingProfiles");
 
     init_timing_coordination_dependency_map<NodeTimingMessagePropagates, std::string, TimingMessagePropagateSharedPtr>(
       node_timing_message_propagates_,
@@ -338,13 +314,7 @@ SingleThreadedExecutor::handle_subscription_buffer(const char * node_name)
 
   std::for_each(node_topic_subscription_objects_[node_name_str].begin(), node_topic_subscription_objects_[node_name_str].end(), [&](auto& v)
   {
-    auto timing_header = v.second->subscription->read_timing_header(v.second->message);
-    node_timing_message_propagates_[node_name_str]->receive_timing_header(timing_header);
-
-    v.second->subscription->handle_message(
-      v.second->message,
-      v.second->message_info
-    );
+    v.second->subscription->handle_message( v.second->message, v.second->message_info);
   });
 
   node_topic_subscription_objects_[node_name_str].clear();
@@ -357,9 +327,6 @@ SingleThreadedExecutor::handle_waitable_buffer(const char * node_name)
 
   std::for_each(node_topic_waitable_objects_[node_name_str].begin(), node_topic_waitable_objects_[node_name_str].end(), [&](auto& v)
   {
-    auto timing_header = v.second->waitable->read_timing_header(v.second->data);
-    node_timing_message_propagates_[node_name_str]->receive_timing_header(timing_header);
-
     v.second->waitable->execute(v.second->data);
   });
   
@@ -406,7 +373,6 @@ SingleThreadedExecutor::execute_any_executable(AnyExecutable & any_exec)
       execute_timer(any_exec.timer);
     else
       add_timer_to_buffer(any_exec.timer, any_exec.node_base->get_name());
-    // execute_timer(any_exec.timer);
   }
   if (any_exec.service) {
     //add_service_to_buffer();
