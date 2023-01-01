@@ -21,6 +21,8 @@ find_package(rosidl_typesupport_cpp REQUIRED)
 find_package(statistics_msgs REQUIRED)
 find_package(tracetools REQUIRED)
 
+find_package(tcl_std_msgs REQUIRED)
+
 # TODO(wjwwood): remove this when gtest can build on its own, when using target_compile_features()
 # Default to C++17
 if(NOT CMAKE_CXX_STANDARD)
@@ -108,6 +110,14 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/utilities.cpp
   src/rclcpp/wait_set_policies/detail/write_preferring_read_write_lock.cpp
   src/rclcpp/waitable.cpp
+
+  #
+  #Timing Coordination Library
+  #
+  src/rclcpp/tcl_node_interfaces/node_release_timer.cpp
+  src/rclcpp/tcl_node_interfaces/node_timing.cpp
+  src/rclcpp/tcl_node_interfaces/node_profile.cpp
+  src/rclcpp/tcl_node_interfaces/node_timing_propagate.cpp
 )
 
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
@@ -204,6 +214,7 @@ ament_target_dependencies(${PROJECT_NAME}
   "rosidl_runtime_cpp"
   "statistics_msgs"
   "tracetools"
+  "tcl_std_msgs"
 )
 
 # Causes the visibility macros to use dllexport rather than dllimport,
@@ -239,6 +250,7 @@ ament_export_dependencies(rosidl_runtime_cpp)
 ament_export_dependencies(rcl_yaml_param_parser)
 ament_export_dependencies(statistics_msgs)
 ament_export_dependencies(tracetools)
+ament_export_dependencies(tcl_std_msgs)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

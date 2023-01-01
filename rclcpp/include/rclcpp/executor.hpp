@@ -42,6 +42,8 @@
 #include "rclcpp/utilities.hpp"
 #include "rclcpp/visibility_control.hpp"
 
+#include "rclcpp/tcl_node_interfaces/node_timing_interface.hpp"
+
 namespace rclcpp
 {
 
@@ -411,6 +413,13 @@ public:
   RCLCPP_PUBLIC
   bool
   is_spinning();
+
+  RCLCPP_PUBLIC
+  virtual void
+  add_node_timing_interface(rclcpp::tcl_node_interfaces::NodeTimingInterface::SharedPtr node_timing)
+  {
+    (void)node_timing;
+  }
 
 protected:
   RCLCPP_PUBLIC

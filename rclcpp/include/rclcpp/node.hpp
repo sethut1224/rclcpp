@@ -70,6 +70,8 @@
 #include "rclcpp/timer.hpp"
 #include "rclcpp/visibility_control.hpp"
 
+#include "rclcpp/tcl_node_interfaces/node_timing_interface.hpp"
+
 namespace rclcpp
 {
 
@@ -1175,6 +1177,10 @@ public:
   rclcpp::node_interfaces::NodeTimeSourceInterface::SharedPtr
   get_node_time_source_interface();
 
+  RCLCPP_PUBLIC
+  rclcpp::tcl_node_interfaces::NodeTimingInterface::SharedPtr
+  get_node_timing_interface();
+
   /// Return the sub-namespace, if this is a sub-node, otherwise an empty string.
   /**
    * The returned sub-namespace is either the accumulated sub-namespaces which
@@ -1282,6 +1288,18 @@ public:
   const rclcpp::NodeOptions &
   get_node_options() const;
 
+  RCLCPP_PUBLIC
+  void
+  create_timing_header();
+
+  RCLCPP_PUBLIC
+  void
+  propagate_timing_info();
+
+  RCLCPP_PUBLIC
+  tcl_std_msgs::msg::TimingHeader::SharedPtr 
+  get_timing_header();
+  
 protected:
   /// Construct a sub-node, which will extend the namespace of all entities created with it.
   /**
@@ -1310,6 +1328,12 @@ private:
   rclcpp::node_interfaces::NodeWaitablesInterface::SharedPtr node_waitables_;
 
   const rclcpp::NodeOptions node_options_;
+
+  //
+  // Timing Coordination Library
+  //
+  rclcpp::tcl_node_interfaces::NodeTimingInterface::SharedPtr node_timing_;
+
   const std::string sub_namespace_;
   const std::string effective_namespace_;
 };

@@ -39,5 +39,11 @@ rclcpp::spin(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr)
 void
 rclcpp::spin(rclcpp::Node::SharedPtr node_ptr)
 {
-  rclcpp::spin(node_ptr->get_node_base_interface());
+  // rclcpp::spin(node_ptr->get_node_base_interface());
+  // Timing Coordination Library
+  rclcpp::executors::SingleThreadedExecutor exec;
+  exec.add_node(node_ptr->get_node_base_interface());
+  exec.add_node_timing_interface(node_ptr->get_node_timing_interface());
+  exec.spin();
+  exec.remove_node(node_ptr);
 }

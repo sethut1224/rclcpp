@@ -39,14 +39,27 @@ public:
   /**
    * \param[in] options Additional options used in the construction of the component.
    */
+  
+  //
+  // Timing Coordination Library
+  // NodeInstanceWrapper
+  // create_node_instance(const rclcpp::NodeOptions & options) override
+  // {
+  //   auto node = std::make_shared<NodeT>(options);
+
+  //   return NodeInstanceWrapper(
+  //     node, std::bind(&NodeT::get_node_base_interface, node));
+  // }
+
   NodeInstanceWrapper
   create_node_instance(const rclcpp::NodeOptions & options) override
   {
     auto node = std::make_shared<NodeT>(options);
 
     return NodeInstanceWrapper(
-      node, std::bind(&NodeT::get_node_base_interface, node));
+      node, std::bind(&NodeT::get_node_base_interface, node), std::bind(&NodeT::get_node_timing_interface, node));
   }
+
 };
 }  // namespace rclcpp_components
 

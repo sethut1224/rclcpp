@@ -29,11 +29,28 @@
 #include "rclcpp/utilities.hpp"
 #include "rclcpp/rate.hpp"
 #include "rclcpp/visibility_control.hpp"
+#include "rclcpp/tcl_node_interfaces/node_timing_interface.hpp"
 
 namespace rclcpp
 {
 namespace executors
 {
+//
+// Timing Coordination Library
+//
+typedef struct subscription_object_t
+{
+  rclcpp::SubscriptionBase::SharedPtr subscription;
+  std::shared_ptr<void> message;
+  rclcpp::MessageInfo message_info;
+  
+  subscription_object_t(
+    rclcpp::SubscriptionBase::SharedPtr & _subscription,
+    std::shared_ptr<void> _message,
+    rclcpp::MessageInfo _message_info
+  ) : subscription(_subscription), message(_message), message_info(_message_info) {}
+
+} subscription_object_t;
 
 /// Single-threaded executor implementation.
 /**
@@ -61,12 +78,104 @@ public:
    * if the associated context is configured to shutdown on SIGINT.
    * \throws std::runtime_error when spin() called while already spinning
    */
+
+  //
+  //Timing Coordination Library
+  //
+
   RCLCPP_PUBLIC
   void
   spin() override;
 
+  RCLCPP_PUBLIC
+  void
+  spin_some(std::chrono::nanoseconds max_duration = std::chrono::nanoseconds(0)) override;
+
+  RCLCPP_PUBLIC
+  void
+  add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify = true) override;
+
+  RCLCPP_PUBLIC
+  void
+  add_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify = true) override;
+
+  RCLCPP_PUBLIC
+  void
+  sleep();
+
+  RCLCPP_PUBLIC
+  void
+  add_node_timing_interface(rclcpp::tcl_node_interfaces::NodeTimingInterface::SharedPtr node_timing) override;
+
+  RCLCPP_PUBLIC
+  void
+  spin_some_impl(std::chrono::nanoseconds max_duration, bool exhaustive);
+
+  RCLCPP_PUBLIC
+  void
+  execute_any_executable_for_tcl(AnyExecutable & any_exec);
+
+  RCLCPP_PUBLIC
+  void
+  add_subscription_to_buffer(rclcpp::SubscriptionBase::SharedPtr subscription);
+
+  RCLCPP_PUBLIC
+  void
+  add_timer_to_buffer(rclcpp::TimerBase::SharedPtr timer);
+
+  RCLCPP_PUBLIC
+  void
+  handle_buffer();
+
+  RCLCPP_PUBLIC
+  void
+  handle_subscription_buffer();
+
+  RCLCPP_PUBLIC
+  void
+  handle_timer_buffer();
+
+  RCLCPP_PUBLIC
+  bool
+  check_blocking_condition();
+
+  RCLCPP_PUBLIC
+  void
+  update_blocking_condition_map(const char * topic_name);
+
+  RCLCPP_PUBLIC
+  void
+  reset_blocking_condition_map();
+
+  RCLCPP_PUBLIC
+  void
+  publish_profile_data();
+
 private:
   RCLCPP_DISABLE_COPY(SingleThreadedExecutor)
+
+  rclcpp::tcl_node_interfaces::NodeReleaseTimerInterface::SharedPtr tcl_timer_{nullptr};
+  rclcpp::tcl_node_interfaces::NodeProfileInterface::SharedPtr tcl_profiler_{nullptr};
+  rclcpp::tcl_node_interfaces::NodeTimingPropagateInterface::SharedPtr tcl_timing_propagator_{nullptr};
+
+  std::unordered_map<std::string, std::shared_ptr<subscription_object_t>> topic_subscription_objects_;
+  std::unordered_map<std::string, bool> blocking_condition_map_;
+
+  std::vector<rclcpp::TimerBase::SharedPtr> timer_objects_;
+
+  bool use_tcl_{false};
+  bool use_blocking_io_{false};
+  bool is_condition_satisfied_{false};
+  bool profile_enabled_{false};
+
+  rclcpp::Time execution_start_time_;
+
+  std::function<rclcpp::Time()> get_now = [&]()
+  {
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
+    return rclcpp::Time(static_cast<int32_t>(ts.tv_sec), static_cast<uint32_t>(ts.tv_nsec), RCL_STEADY_TIME);
+  };
 };
 
 }  // namespace executors

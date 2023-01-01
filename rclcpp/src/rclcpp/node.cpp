@@ -43,6 +43,11 @@
 
 #include "./detail/resolve_parameter_overrides.hpp"
 
+//
+// Timing Coordination Library
+//
+#include "rclcpp/tcl_node_interfaces/node_timing.hpp"
+
 using rclcpp::Node;
 using rclcpp::NodeOptions;
 using rclcpp::exceptions::throw_from_rcl_error;
@@ -207,6 +212,11 @@ Node::Node(
     )),
   node_waitables_(new rclcpp::node_interfaces::NodeWaitables(node_base_.get())),
   node_options_(options),
+  node_timing_(new rclcpp::tcl_node_interfaces::NodeTiming(
+    node_base_,
+    node_parameters_,
+    node_topics_,
+    node_options_)),
   sub_namespace_(""),
   effective_namespace_(create_effective_namespace(this->get_namespace(), sub_namespace_))
 {
@@ -580,6 +590,12 @@ Node::get_node_waitables_interface()
   return node_waitables_;
 }
 
+rclcpp::tcl_node_interfaces::NodeTimingInterface::SharedPtr
+Node::get_node_timing_interface()
+{
+  return node_timing_;
+}
+
 const std::string &
 Node::get_sub_namespace() const
 {
@@ -604,4 +620,24 @@ const NodeOptions &
 Node::get_node_options() const
 {
   return this->node_options_;
+}
+
+void
+Node::create_timing_header()
+{
+  if(this->node_timing_)
+    this->node_timing_->create_timing_header();
+}
+
+void
+Node::propagate_timing_info()
+{
+  if(this->node_timing_)
+    this->node_timing_->propagate_timing_info();
+}
+
+tcl_std_msgs::msg::TimingHeader::SharedPtr 
+Node::get_timing_header()
+{
+  return this->node_timing_->get_timing_header();
 }

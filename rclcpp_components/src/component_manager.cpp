@@ -201,6 +201,7 @@ ComponentManager::add_node_to_executor(uint64_t node_id)
 {
   if (auto exec = executor_.lock()) {
     exec->add_node(node_wrappers_[node_id].get_node_base_interface(), true);
+    exec->add_node_timing_interface(node_wrappers_[node_id].get_node_timing_interface());
   }
 }
 
