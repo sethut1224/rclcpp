@@ -32,8 +32,8 @@ void NodeProfile::publish(
             msg->timing_header = *timing_header;
         else
             msg->timing_header = tcl_std_msgs::msg::TimingHeader();
-        msg->release_time.start   = release_start;
-        msg->release_time.end     = release_end;
+        msg->response_time.start  = release_start;
+        msg->response_time.end    = release_end;
         msg->execution_time.start = execution_start;
         msg->execution_time.end   = execution_end;
 
