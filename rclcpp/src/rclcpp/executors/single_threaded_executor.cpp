@@ -363,6 +363,7 @@ SingleThreadedExecutor::add_subscription_to_buffer(rclcpp::SubscriptionBase::Sha
       { 
         topic_subscription_objects_[topic_name_str] = std::make_shared<subscription_object_t>(
           subscription, message, message_info);
+        topic_subscription_order_.push_back(topic_name_str);
       });
     }
     subscription->return_message(message);
@@ -387,11 +388,12 @@ SingleThreadedExecutor::handle_buffer()
 void
 SingleThreadedExecutor::handle_subscription_buffer()
 {
-  std::for_each(topic_subscription_objects_.begin(), topic_subscription_objects_.end(), [&](auto& it)
+  std::for_each(topic_subscription_order_.begin(), topic_subscription_order_.end(), [&](auto& name)
   {
-    it.second->subscription->handle_message(it.second->message, it.second->message_info);
+    topic_subscription_objects_[name]->subscription->handle_message(topic_subscription_objects_[name]->message, topic_subscription_objects_[name]->message_info);
   });
 
+  topic_subscription_order_.clear();
   topic_subscription_objects_.clear();
 }
 

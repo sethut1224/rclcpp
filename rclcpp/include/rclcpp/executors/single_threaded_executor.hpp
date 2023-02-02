@@ -159,6 +159,7 @@ private:
   rclcpp::tcl_node_interfaces::NodeTimingPropagateInterface::SharedPtr tcl_timing_propagator_{nullptr};
 
   std::unordered_map<std::string, std::shared_ptr<subscription_object_t>> topic_subscription_objects_;
+  std::vector<std::string> topic_subscription_order_;
   std::unordered_map<std::string, bool> blocking_condition_map_;
 
   std::vector<rclcpp::TimerBase::SharedPtr> timer_objects_;
